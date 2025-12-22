@@ -1,42 +1,22 @@
-
----
-
-## .gitignore
-
-```gitignore
-# OS files
+# OS / Editor
 .DS_Store
 Thumbs.db
-
-# IDE / Editor
 .vscode/
 .idea/
-*.swp
 
-# Environment & config
+# Logs
+*.log
+
+# PHP vendor (if you later add Composer)
+vendor/
+
+# Local env files
 .env
 .env.*
-/config/local.php
 
-# Dependencies
-/vendor/
-node_modules/
-
-# Runtime / storage
-/storage/logs/*
-!/storage/logs/.gitkeep
-/storage/cache/*
-!/storage/cache/.gitkeep
-
-# Licenses (never commit real licenses)
-/licenses/*.lic
-
-# Encoded ionCube files (generated artifacts)
-/app/protected/*.php
-
-# Database dumps
-*.sql
+# Local DB dumps
+*.sql.dump
 *.dump
 
-# Build artifacts
-/dist/
+# Cache
+.cache/

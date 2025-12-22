@@ -1,145 +1,159 @@
 # CalcPro Engine
 
-CalcPro Engine is a licensed, web-based advanced calculator built with PHP, MySQL, Alpine.js, and Tailwind CSS.
-It is designed as a reference implementation for ionCube licensing, code protection, and feature gating in a real-world PHP application.
+CalcPro Engine is a PHP-based calculator application designed as a **licensable computation engine**.  
+It demonstrates how to build a modern PHP app with **MySQL persistence**, **Tailwind CSS**, **Alpine.js**, and a clean architecture that is ready for **ionCube code protection**.
 
-The project deliberately separates:
-
-- Free, readable application code
-- Licensed, ionCube-encoded calculation engines
-- Modern frontend UI
-- Persistent storage
-
-This makes it suitable both as a learning project and as a blueprint for commercial PHP software.
+The project intentionally separates **free, readable code** from **protected Pro logic**, mirroring real-world commercial PHP software distribution.
 
 ---
 
-## Features
+## 1. Purpose of This Project
+
+This project is built to help you:
+
+- Practice real-world PHP application structure
+- Implement licensing and feature gating
+- Store and audit calculations in MySQL
+- Prepare proprietary logic for ionCube encoding
+- Build a modern, responsive UI without a framework
+
+It is **not** a toy calculator.  
+It is a miniature, production-style software product.
+
+---
+
+## 2. Tech Stack
+
+- **Backend:** PHP 8+ (procedural entry point with OOP core)
+- **Database:** MySQL (PDO, prepared statements)
+- **Frontend:** Tailwind CSS, Alpine.js
+- **Icons:** SVG-ready (Heroicons recommended)
+- **Security:** Sessions, password hashing, CSRF protection
+- **Licensing Ready:** Designed for ionCube Loader integration
+
+---
+
+## 3. Project Structure
+
+```
+calcpro/
+├── public/                 # Web root
+│   └── index.php
+│
+├── app/
+│   ├── config/             # App and DB configuration
+│   ├── core/               # Core utilities (Auth, DB, Security)
+│   ├── free/               # Free, readable calculator logic
+│   ├── protected/          # Pro logic (to be ionCube-encoded)
+│   └── views/              # UI views (Tailwind + Alpine)
+│
+├── storage/
+│   └── logs/
+│
+├── .env.example
+├── README.md
+└── .gitignore
+```
+
+Key principle:
+
+- Everything in `/app/protected` is considered **commercial IP**
+- Everything else is safe to read and maintain
+
+---
+
+## 4. Features Implemented
 
 ### Free Features
 
-- Basic arithmetic calculations
-- Responsive, modern UI
-- Calculation history stored in MySQL
+- Basic arithmetic calculator
+- Calculation history per user
+- User authentication
+- Responsive modern UI
 
-### Licensed (Pro) Features
+### Licensing Foundation
+
+- License table with plan, expiry, binding fields
+- License-aware UI
+- Feature-gating hooks ready for Pro logic
+
+### Ready for Pro (Next Phase)
 
 - Scientific calculations
 - Financial calculations
-- Statistical calculations
-- Expression parsing
-- Feature access controlled by license state
+- Statistics engine
+- Expression parser
+- ionCube Loader checks
 
 ---
 
-## Technology Stack
+## 5. Database Setup
 
-### Backend
+1. Create a MySQL database named `calcpro`
+2. Run the schema provided in the documentation
+3. Create at least one user manually (seed)
 
-- PHP 8.1 or higher
-- MySQL 8+
-- PDO
-- ionCube Loader (runtime)
-- ionCube Encoder (for protected modules)
+Passwords **must** be hashed using:
 
-### Frontend
-
-- Tailwind CSS
-- Alpine.js
-- Heroicons (SVG icons)
+```php
+password_hash('your-password', PASSWORD_DEFAULT);
+```
 
 ---
 
-## Project Structure
+## 6. Environment Setup
 
-/public
-index.php
-api.php
+1. Copy `.env.example` to `.env`
+2. Update database credentials
+3. Ensure PHP sessions are enabled
+4. Point your web server to `/public`
 
-/app
-/bootstrap
-app.php
-db.php
-license.php
-/free
-BasicCalculator.php
-/protected
-ionCube encoded files
-/resources
-/views
-calculator.php
+Example local setups:
 
-/config
-/licenses
-/storage
+- XAMPP
+- Laragon
+- Linux + Apache/Nginx
 
 ---
 
-## Database Setup
+## 7. Security Notes
 
-Create the database:
-
-CREATE DATABASE calcpro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-Create tables:
-
-CREATE TABLE calculations (
-id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-expression VARCHAR(255) NOT NULL,
-result VARCHAR(255) NOT NULL,
-module ENUM('basic','scientific','financial','statistics') NOT NULL,
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE app_state (
-id TINYINT PRIMARY KEY DEFAULT 1,
-last_license_check TIMESTAMP NULL,
-license_status ENUM('valid','expired','invalid','trial') NOT NULL,
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+- All database queries use prepared statements
+- CSRF tokens are enforced on forms
+- Sessions regenerate on login
+- Sensitive files should live **outside web root**
+- License files should be read-only in production
 
 ---
 
-## Installation
+## 8. ionCube Integration Plan
 
-1. Clone the repository
-2. Configure database credentials in /app/bootstrap/db.php
-3. Ensure ionCube Loader is installed for your PHP version
-4. Point your web server document root to /public
-5. Open the app in your browser
+This project is intentionally ionCube-friendly.
 
----
+Recommended workflow:
 
-## Licensing
-
-This project is designed to work with ionCube licenses.
-
-- License files are stored in /licenses
-- License validation logic lives in /app/bootstrap/license.php
-- Pro features are implemented in encoded files under /app/protected
-
-During early development, license validation is stubbed to allow UI and logic development before encoding.
+1. Develop Pro logic normally in `/app/protected`
+2. Encode Pro files with ionCube Encoder
+3. Replace original files with encoded versions
+4. Verify ionCube Loader availability at runtime
+5. Gate access by license plan and environment
 
 ---
 
-## Development Philosophy
+## 9. Who This Is For
 
-- Free code stays readable
-- Business value lives in encoded modules
-- License checks are enforced at both UI and API level
-- Configuration and customer data are never overwritten during updates
-
-This mirrors how professional PHP software is shipped and maintained.
+- PHP developers learning commercial software protection
+- Engineers building licensable PHP tools
+- Developers moving beyond simple CRUD apps
+- Anyone who wants clean PHP without heavy frameworks
 
 ---
 
-## Disclaimer
+## 10. License
 
-This project is for educational and architectural reference purposes.
-You are responsible for complying with ionCube licensing terms when distributing encoded software.
+This project is for **learning and internal use**.
+Adapt and extend it responsibly for commercial deployment.
 
 ---
 
-## Author
-
-Built as a hands-on exploration of secure PHP software distribution and licensing.
+Built with clarity, structure, and production discipline.
