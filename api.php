@@ -17,6 +17,8 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/protected_api.php';
+require_once __DIR__ . '/logger.php';
+
 
 /* -------------------------
  | Local helpers
@@ -78,6 +80,13 @@ try {
              VALUES (?, ?, ?)"
         );
         $stmt->execute([$category, $input, $result]);
+
+        app_log(
+    'info',
+    'calc',
+    'Calculation stored',
+    ['category' => $category]
+);
 
         json_out(['ok' => true]);
     }
@@ -161,6 +170,14 @@ try {
         );
         $stmt->execute([$title, $expr, $xmin, $xmax, $step]);
 
+        app_log(
+    'info',
+    'graph',
+    'Graph saved',
+    ['expression' => $expr]
+);
+
+
         json_out(['ok' => true]);
     }
 
@@ -185,4 +202,12 @@ try {
         'ok' => false,
         'error' => APP_DEBUG ? $e->getMessage() : 'Server error'
     ], 500);
+
+    app_log(
+    'error',
+    'api_error',
+    $e->getMessage(),
+    ['action' => $action]
+);
+
 }

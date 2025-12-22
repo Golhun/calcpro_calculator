@@ -23,14 +23,16 @@ declare(strict_types=1);
  */
 function json_out(array $payload, int $code = 200): void
 {
+    if (!APP_DEBUG && isset($payload['error'])) {
+        $payload['error'] = 'An error occurred. Please try again.';
+    }
+
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(
-        $payload,
-        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-    );
+    echo json_encode($payload);
     exit;
 }
+
 
 /* -------------------------------------------------
  | VALIDATION / SANITY HELPERS
