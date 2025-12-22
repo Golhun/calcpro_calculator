@@ -1,9 +1,22 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * api.php
+ *
+ * Central API router for Calc Pro.
+ * Enforces:
+ * - CSRF protection
+ * - Rate limiting
+ * - Input validation
+ * - Protected business logic via ionCube boundary
+ */
+
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/protected_api.php';
 
 /* -------------------------
  | Local helpers
@@ -31,7 +44,7 @@ $action = $_GET['action'] ?? '';
 try {
     $pdo = db();
 
-    /* ---------- HISTORY (GET) ---------- */
+    /* ---------- HISTORY LIST (GET) ---------- */
     if ($action === 'history_list') {
         rate_limit('history_list', 60, 60);
 
@@ -45,7 +58,7 @@ try {
         json_out(['ok' => true, 'data' => $stmt->fetchAll()]);
     }
 
-    /* ---------- HISTORY (POST) ---------- */
+    /* ---------- HISTORY ADD (POST) ---------- */
     if ($action === 'history_add') {
 
         require_post();
@@ -69,7 +82,7 @@ try {
         json_out(['ok' => true]);
     }
 
-    /* ---------- FINANCIAL (POST) ---------- */
+    /* ---------- FINANCIAL (POST, PROTECTED) ---------- */
     if ($action === 'financial') {
 
         require_post();
@@ -79,7 +92,7 @@ try {
         $type = $_POST['type'] ?? '';
 
         if ($type === 'simple_interest') {
-            $res = simple_interest(
+            $res = p_simple_interest(
                 (float)($_POST['principal'] ?? 0),
                 (float)($_POST['rate'] ?? 0),
                 (float)($_POST['time'] ?? 0)
@@ -88,7 +101,7 @@ try {
         }
 
         if ($type === 'compound_interest') {
-            $res = compound_interest(
+            $res = p_compound_interest(
                 (float)($_POST['principal'] ?? 0),
                 (float)($_POST['rate'] ?? 0),
                 (float)($_POST['time'] ?? 0),
@@ -98,7 +111,7 @@ try {
         }
 
         if ($type === 'loan_payment') {
-            $res = loan_payment(
+            $res = p_loan_payment(
                 (float)($_POST['principal'] ?? 0),
                 (float)($_POST['rate'] ?? 0),
                 (int)($_POST['months'] ?? 1)
@@ -109,7 +122,7 @@ try {
         json_out(['ok' => false, 'error' => 'Unknown financial type'], 400);
     }
 
-    /* ---------- STATS (POST) ---------- */
+    /* ---------- STATS (POST, PROTECTED) ---------- */
     if ($action === 'stats') {
 
         require_post();
@@ -117,9 +130,9 @@ try {
         verify_csrf($_POST['csrf_token'] ?? null);
 
         $csv = limit_length((string)($_POST['values'] ?? ''), 1000, 'values');
-
         $nums = parse_number_list($csv);
-        $res  = stats_summary($nums);
+
+        $res = p_stats_summary($nums);
 
         json_out(['ok' => true, 'data' => $res]);
     }
