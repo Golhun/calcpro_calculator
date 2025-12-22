@@ -1,0 +1,42 @@
+
+---
+
+## .gitignore
+
+```gitignore
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+# Environment & config
+.env
+.env.*
+/config/local.php
+
+# Dependencies
+/vendor/
+node_modules/
+
+# Runtime / storage
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
+
+# Licenses (never commit real licenses)
+/licenses/*.lic
+
+# Encoded ionCube files (generated artifacts)
+/app/protected/*.php
+
+# Database dumps
+*.sql
+*.dump
+
+# Build artifacts
+/dist/
