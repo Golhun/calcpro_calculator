@@ -1,15 +1,18 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/ioncube_check.php';
 require_once __DIR__ . '/protected_stub.php';
+?>
+
 ?>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calc Pro</title>
+  <title>Calc Pro</title><title><?= APP_NAME ?></title>
 
   <!-- Tailwind CSS (CDN for simplicity). For production, build Tailwind locally. -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -298,6 +301,10 @@ require_once __DIR__ . '/protected_stub.php';
         </div>
       </aside>
     </div>
+    <div class="text-xs text-slate-400">
+  <?= APP_NAME ?> v<?= APP_VERSION ?> • Environment: <?= APP_ENV ?>
+</div>
+
   </div>
 
 <script>
