@@ -1,159 +1,226 @@
-# CalcPro Engine
+# Calc Pro
 
-CalcPro Engine is a PHP-based calculator application designed as a **licensable computation engine**.  
-It demonstrates how to build a modern PHP app with **MySQL persistence**, **Tailwind CSS**, **Alpine.js**, and a clean architecture that is ready for **ionCube code protection**.
+Calc Pro is a simple, well-structured PHP + MySQL calculator application designed for **learning, practice, and demonstration** purposes.  
+It intentionally brings multiple calculator domains into **one small app** to help you practice architecture, PHP logic, MySQL integration, frontend interaction, and **ionCube usage patterns**.
 
-The project intentionally separates **free, readable code** from **protected Pro logic**, mirroring real-world commercial PHP software distribution.
+This project is ideal for:
 
----
-
-## 1. Purpose of This Project
-
-This project is built to help you:
-
-- Practice real-world PHP application structure
-- Implement licensing and feature gating
-- Store and audit calculations in MySQL
-- Prepare proprietary logic for ionCube encoding
-- Build a modern, responsive UI without a framework
-
-It is **not** a toy calculator.  
-It is a miniature, production-style software product.
+- Practicing PHP application structure without frameworks
+- Understanding secure calculation workflows
+- Learning how to integrate ionCube legitimately
+- Using Git and GitHub for version control and traceability
 
 ---
 
-## 2. Tech Stack
+## Key Features
 
-- **Backend:** PHP 8+ (procedural entry point with OOP core)
-- **Database:** MySQL (PDO, prepared statements)
-- **Frontend:** Tailwind CSS, Alpine.js
-- **Icons:** SVG-ready (Heroicons recommended)
-- **Security:** Sessions, password hashing, CSRF protection
-- **Licensing Ready:** Designed for ionCube Loader integration
+### 1. Basic Calculator
+
+- Arithmetic expressions
+- Brackets and operator precedence
+- Expression evaluation using `math.js` (safe, no JS eval)
+
+### 2. Scientific Calculator
+
+- Trigonometric functions: `sin`, `cos`, `tan`
+- Logarithmic functions: `log`, `ln`
+- Powers, roots, factorial
+- Constants: `pi`, `e`
+
+### 3. Financial Calculations
+
+- Simple Interest
+- Compound Interest
+- Loan Repayment (amortized loans)
+- All formulas calculated server-side in PHP
+
+### 4. Statistical Calculations
+
+- Mean
+- Median
+- Mode
+- Variance
+- Standard Deviation
+- Min / Max
+- Robust input parsing and validation
+
+### 5. Graph Drawing
+
+- Plot `y = f(x)` functions
+- Configurable range and step size
+- Uses Chart.js for clean rendering
+- Save and reload graph definitions from MySQL
+
+### 6. Persistence (MySQL)
+
+- Calculation history stored in database
+- Saved graph definitions
+- Clean PDO-based database access
+
+### 7. ionCube Practice Support
+
+- Proper ionCube Loader detection
+- Clear separation of protected logic
+- No bypassing or circumvention
+- Safe for real-world learning
 
 ---
 
-## 3. Project Structure
+## Technology Stack
+
+| Layer        | Technology                      |
+| ------------ | ------------------------------- |
+| Backend      | PHP 8.x                         |
+| Database     | MySQL 8.x                       |
+| Frontend     | Tailwind CSS                    |
+| JS Framework | Alpine.js                       |
+| Math Engine  | math.js                         |
+| Charts       | Chart.js                        |
+| Icons        | Heroicons (inline SVG)          |
+| Security     | ionCube Loader (practice-ready) |
+| Versioning   | Git + GitHub                    |
+
+---
+
+## Database Configuration
+
+**Important:**  
+The database name is:
 
 ```
-calcpro/
-├── public/                 # Web root
-│   └── index.php
-│
-├── app/
-│   ├── config/             # App and DB configuration
-│   ├── core/               # Core utilities (Auth, DB, Security)
-│   ├── free/               # Free, readable calculator logic
-│   ├── protected/          # Pro logic (to be ionCube-encoded)
-│   └── views/              # UI views (Tailwind + Alpine)
-│
-├── storage/
-│   └── logs/
-│
-├── .env.example
-├── README.md
-└── .gitignore
+calcpro
 ```
 
-Key principle:
+### Create the Database
 
-- Everything in `/app/protected` is considered **commercial IP**
-- Everything else is safe to read and maintain
+```sql
+CREATE DATABASE calcpro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
----
+### Tables
 
-## 4. Features Implemented
+Tables are defined in `schema.sql`. Import them using:
 
-### Free Features
-
-- Basic arithmetic calculator
-- Calculation history per user
-- User authentication
-- Responsive modern UI
-
-### Licensing Foundation
-
-- License table with plan, expiry, binding fields
-- License-aware UI
-- Feature-gating hooks ready for Pro logic
-
-### Ready for Pro (Next Phase)
-
-- Scientific calculations
-- Financial calculations
-- Statistics engine
-- Expression parser
-- ionCube Loader checks
-
----
-
-## 5. Database Setup
-
-1. Create a MySQL database named `calcpro`
-2. Run the schema provided in the documentation
-3. Create at least one user manually (seed)
-
-Passwords **must** be hashed using:
-
-```php
-password_hash('your-password', PASSWORD_DEFAULT);
+```bash
+mysql -u root -p calcpro < schema.sql
 ```
 
 ---
 
-## 6. Environment Setup
+## Environment Configuration
 
-1. Copy `.env.example` to `.env`
-2. Update database credentials
-3. Ensure PHP sessions are enabled
-4. Point your web server to `/public`
+Database connection is handled in `db.php` using PDO.
 
-Example local setups:
+### Default (Local Development)
 
-- XAMPP
-- Laragon
-- Linux + Apache/Nginx
+```text
+DB_HOST = 127.0.0.1
+DB_PORT = 3306
+DB_NAME = calcpro
+DB_USER = root
+DB_PASS = (empty)
+```
 
----
+### Recommended (Environment Variables)
 
-## 7. Security Notes
-
-- All database queries use prepared statements
-- CSRF tokens are enforced on forms
-- Sessions regenerate on login
-- Sensitive files should live **outside web root**
-- License files should be read-only in production
-
----
-
-## 8. ionCube Integration Plan
-
-This project is intentionally ionCube-friendly.
-
-Recommended workflow:
-
-1. Develop Pro logic normally in `/app/protected`
-2. Encode Pro files with ionCube Encoder
-3. Replace original files with encoded versions
-4. Verify ionCube Loader availability at runtime
-5. Gate access by license plan and environment
+```bash
+export DB_HOST=127.0.0.1
+export DB_PORT=3306
+export DB_NAME=calcpro
+export DB_USER=root
+export DB_PASS=your_password
+```
 
 ---
 
-## 9. Who This Is For
+## Running the Application
 
-- PHP developers learning commercial software protection
-- Engineers building licensable PHP tools
-- Developers moving beyond simple CRUD apps
-- Anyone who wants clean PHP without heavy frameworks
+Using PHP’s built-in server:
+
+```bash
+php -S localhost:8000
+```
+
+Open in browser:
+
+```
+http://localhost:8000/index.php
+```
 
 ---
 
-## 10. License
+## ionCube Learning Notes
 
-This project is for **learning and internal use**.
-Adapt and extend it responsibly for commercial deployment.
+This project **does not** attempt to bypass ionCube.
+
+What it demonstrates correctly:
+
+- How to detect the ionCube Loader
+- How to fail gracefully if the loader is missing
+- Where to place encoded files
+- How to separate protected logic
+
+### Recommended ionCube Workflow
+
+1. Write sensitive PHP logic in a separate file
+2. Encode it locally using the official ionCube Encoder
+3. Deploy encoded output to a server with ionCube Loader enabled
+4. Keep fallback messaging clean and professional
 
 ---
 
-Built with clarity, structure, and production discipline.
+## Git & GitHub Workflow
+
+Recommended commit style (Conventional Commits):
+
+```text
+feat: add scientific calculator
+feat: add financial loan calculator
+fix: validate empty expressions
+docs: update README
+refactor: extract db connector
+```
+
+### Initial Setup
+
+```bash
+git init
+git add .
+git commit -m "feat: initial Calc Pro implementation"
+
+git branch -M main
+git remote add origin <your-github-repo-url>
+git push -u origin main
+```
+
+---
+
+## Project Philosophy
+
+- Simple directory structure (all files in root)
+- No frameworks, no magic
+- Explicit logic, readable code
+- Production-minded patterns without overengineering
+- Easy to extend into a real product later
+
+---
+
+## Roadmap (Optional Enhancements)
+
+- User authentication and per-user history
+- CSV / PDF export of calculations
+- Unit conversions (engineering & medical)
+- Offline-first asset bundling
+- Role-based access with ionCube-protected modules
+
+---
+
+## License
+
+MIT License  
+You are free to use, modify, and extend this project.
+
+---
+
+**Calc Pro**  
+A clean practice ground for real-world PHP, math, databases, and software discipline.
