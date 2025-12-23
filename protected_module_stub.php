@@ -21,7 +21,15 @@ function protected_check_license(): array
         return ['ok' => false, 'reason' => 'Invalid license format'];
     }
 
-    if (($data['product'] ?? '') !== LICENSE_PRODUCT_CODE) {
+    // Accept either legacy `product` (CALCPRO) or engine `product_id` (calcpro_calculator)
+    $okProduct = false;
+    if (!empty($data['product']) && $data['product'] === LICENSE_PRODUCT_CODE) {
+        $okProduct = true;
+    }
+    if (!$okProduct && !empty($data['product_id']) && defined('LICENSE_PRODUCT_ID') && $data['product_id'] === LICENSE_PRODUCT_ID) {
+        $okProduct = true;
+    }
+    if (!$okProduct) {
         return ['ok' => false, 'reason' => 'Invalid product license'];
     }
 
@@ -31,9 +39,10 @@ function protected_check_license(): array
         return ['ok' => false, 'reason' => 'License domain mismatch'];
     }
 
-    // Expiry
-    if (!empty($data['expires'])) {
-        $exp = strtotime($data['expires']);
+    // Expiry — support both `expires` and `expires_at`
+    $expiresRaw = $data['expires'] ?? $data['expires_at'] ?? null;
+    if (!empty($expiresRaw)) {
+        $exp = strtotime($expiresRaw);
         if ($exp !== false && time() > $exp) {
             return ['ok' => false, 'reason' => 'License expired'];
         }
@@ -125,7 +134,7 @@ function protected_stats_summary(array $values): array
     if (!$lic['ok']) {
         throw new RuntimeException('License error: ' . $lic['reason']);
     }
-    
+
     sort($values);
     $n = count($values);
     $sum = array_sum($values);

@@ -47,3 +47,6 @@ if (APP_DEBUG) {
 
 define('LICENSE_FILE', __DIR__ . '/license.key');
 define('LICENSE_PRODUCT_CODE', 'CALCPRO');
+// When integrating the standalone Licensing Engine, set the expected
+// engine product identifier here so both formats are accepted.
+define('LICENSE_PRODUCT_ID', 'calcpro_calculator');
