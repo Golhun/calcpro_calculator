@@ -8,8 +8,57 @@ declare(strict_types=1);
  * In production, you will encode the equivalent logic into protected_module.php using ionCube Encoder.
  */
 
+function protected_check_license(): array
+{
+    if (!defined('LICENSE_FILE') || !file_exists(LICENSE_FILE)) {
+        return ['ok' => false, 'reason' => 'License file missing'];
+    }
+
+    $raw = file_get_contents(LICENSE_FILE);
+    $data = json_decode($raw, true);
+
+    if (!is_array($data)) {
+        return ['ok' => false, 'reason' => 'Invalid license format'];
+    }
+
+    if (($data['product'] ?? '') !== LICENSE_PRODUCT_CODE) {
+        return ['ok' => false, 'reason' => 'Invalid product license'];
+    }
+
+    // Domain binding
+    $domain = $_SERVER['HTTP_HOST'] ?? 'cli';
+    if (!empty($data['domain']) && $data['domain'] !== $domain) {
+        return ['ok' => false, 'reason' => 'License domain mismatch'];
+    }
+
+    // Expiry
+    if (!empty($data['expires'])) {
+        $exp = strtotime($data['expires']);
+        if ($exp !== false && time() > $exp) {
+            return ['ok' => false, 'reason' => 'License expired'];
+        }
+    }
+
+    // Signature verification (stubbed here, enforced in encoded version)
+    if (empty($data['signature'])) {
+        return ['ok' => false, 'reason' => 'Missing license signature'];
+    }
+
+    return [
+        'ok' => true,
+        'issued_to' => $data['issued_to'] ?? 'Unknown',
+        'expires' => $data['expires'] ?? null
+    ];
+}
+
+
 function protected_simple_interest(float $principal, float $ratePct, float $timeYears): array
 {
+        $lic = protected_check_license();
+    if (!$lic['ok']) {
+        throw new RuntimeException('License error: ' . $lic['reason']);
+    }
+
     $r = $ratePct / 100.0;
     $interest = $principal * $r * $timeYears;
     $amount = $principal + $interest;
@@ -22,6 +71,11 @@ function protected_simple_interest(float $principal, float $ratePct, float $time
 
 function protected_compound_interest(float $principal, float $ratePct, float $timeYears, int $compoundsPerYear): array
 {
+        $lic = protected_check_license();
+    if (!$lic['ok']) {
+        throw new RuntimeException('License error: ' . $lic['reason']);
+    }
+
     $r = $ratePct / 100.0;
     $n = max(1, $compoundsPerYear);
     $amount = $principal * pow(1 + ($r / $n), $n * $timeYears);
@@ -35,6 +89,11 @@ function protected_compound_interest(float $principal, float $ratePct, float $ti
 
 function protected_loan_payment(float $principal, float $annualRatePct, int $months): array
 {
+        $lic = protected_check_license();
+    if (!$lic['ok']) {
+        throw new RuntimeException('License error: ' . $lic['reason']);
+    }
+
     $months = max(1, $months);
     $i = ($annualRatePct / 100.0) / 12.0;
 
@@ -62,6 +121,11 @@ function protected_loan_payment(float $principal, float $annualRatePct, int $mon
 
 function protected_stats_summary(array $values): array
 {
+        $lic = protected_check_license();
+    if (!$lic['ok']) {
+        throw new RuntimeException('License error: ' . $lic['reason']);
+    }
+    
     sort($values);
     $n = count($values);
     $sum = array_sum($values);
