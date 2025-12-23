@@ -22,7 +22,11 @@ vendor/
 .cache/
 
 # License keys
-/license.key
+**/license.key
+**/license.state.json
+# Ignore the actual license and local state
+license.key
+license.state.json
 
 # word documents
 *.docx
