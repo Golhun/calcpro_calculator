@@ -3,6 +3,7 @@
 ## Purpose
 
 A small, product-agnostic licensing engine for PHP apps focused on desktop/server installations. It provides:
+
 - Signed license payloads (offline-friendly)
 - Machine binding and activation
 - Update entitlement controls
@@ -48,6 +49,7 @@ Note: The verification logic is encoded for production; see [Security model](#se
 - Simple server API for `activate`, `validate`, `updates`, and `transfer_request`
 
 What this engine intentionally does NOT include:
+
 - Application-specific business logic or UI
 - Automatic file updates (it only indicates update eligibility)
 
@@ -79,6 +81,7 @@ if (License::canReceiveUpdates()) {
 - Optional Server: provides activation/validation/update metadata and transfer workflows.
 
 Core concepts:
+
 - Offline-first: allow limited offline use using policy windows.
 - Machine-binding: licenses can be tied to specific machines to reduce abuse.
 - Update entitlement: updates allowed only when `APP_RELEASE_DATE <= updates_until`.
@@ -132,5 +135,8 @@ Refer to `LICENSE.md` in the repo for licensing terms.
 
 ---
 
-*Last updated: 2025-12-23*
+_Last updated: 2025-12-23_
+
+```
+
 ```
