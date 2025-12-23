@@ -215,6 +215,12 @@ git push -u origin main
 
 ---
 
+## Licensing Integration
+
+This project includes a small, independent **Licensing Engine** for issuing and verifying offline-friendly signed licenses. To integrate the engine into any project, copy the client files from `Licensing Engine/` (for example `License.php`, `Storage.php`, `Validator.php`, `client_config.php`) into your app, set `product_id` and `license_file` in the client config, and include `require_once __DIR__ . '/license_bootstrap.php'` at the top of your entry points (e.g. `index.php`, `api.php`). For full setup and server API details, see `Licensing Engine/INTEGRATION.md`.
+
+---
+
 ## License
 
 MIT License  
