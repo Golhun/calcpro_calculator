@@ -18,6 +18,8 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/config.php';
+
+require_once __DIR__ . '/license_bootstrap.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/security.php';

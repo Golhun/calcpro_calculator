@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
+
+require_once __DIR__ . '/license_bootstrap.php';
 require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/ioncube_check.php';
 require_once __DIR__ . '/protected_stub.php';
