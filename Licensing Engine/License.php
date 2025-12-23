@@ -51,6 +51,18 @@ final class License
             throw new RuntimeException('No license.key found. Please activate the software.');
         }
 
+        // Signature verification (if public key provided) - prevents tampering of critical fields like expires_at
+        $pubKey = $this->cfg['public_key_b64'] ?? getenv('PUBLIC_KEY_B64') ?: null;
+        $requireSig = ($this->cfg['require_signature'] ?? false) === true;
+        if ($requireSig && !$pubKey) {
+            throw new RuntimeException('License signature required but public key not configured.');
+        }
+        if ($pubKey) {
+            if (!Validator::verifySignature($this->license, $pubKey)) {
+                throw new RuntimeException('Invalid license signature.');
+            }
+        }
+
         // Core validation (structure, product, status, expiry)
         Validator::validateCore($this->license, (string)$this->cfg['product_id']);
 
