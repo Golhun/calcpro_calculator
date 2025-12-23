@@ -44,3 +44,6 @@ if (APP_DEBUG) {
     ini_set('display_errors', '0');
     error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 }
+
+define('LICENSE_FILE', __DIR__ . '/license.key');
+define('LICENSE_PRODUCT_CODE', 'CALCPRO');
