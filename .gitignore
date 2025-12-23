@@ -20,3 +20,10 @@ vendor/
 
 # Cache
 .cache/
+
+# License keys
+/license.key
+
+# word documents
+*.docx
+*.doc
