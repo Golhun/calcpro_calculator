@@ -1,380 +1,179 @@
-Licensing Engine Schema Specification (v1)
-Purpose
+# Licensing Engine — Schema Specification (v1)
 
-This document defines the frozen data contract used by the Licensing Engine. It covers:
+## Purpose
 
-The signed license payload (license.key)
+A concise, stable data contract for Licensing Engine v1. Covers the on-disk signed license payload (`license.key`), the local validation cache (`license.state.json`), canonicalization & signing rules, enforcement policies, and quick examples.
 
-The local client cache (license.state.json)
+---
 
-Required fields, formats, and enforcement rules
+## Table of contents
 
-This schema is designed to be product-agnostic and offline-first.
+- [License payload (`license.key`)](#license-payload-licensekey)
+- [Field definitions](#field-definitions)
+- [Canonicalization & signing rules](#canonicalization--signing-rules)
+- [Local validation cache (`license.state.json`)](#local-validation-cache-licensestateful)
+- [Client enforcement rules](#client-enforcement-rules)
+- [Trial model](#trial-model)
+- [Reserved extensions](#reserved-extensions)
+- [Compatibility guarantees](#compatibility-guarantees)
+- [Quick examples](#quick-examples)
+- [Implementation notes & security](#implementation-notes--security)
 
-1. License Payload File (license.key)
-   Format
+---
 
-UTF-8 JSON (minified or pretty is acceptable)
+## License payload (`license.key`)
 
-Must include a digital signature over a canonicalized payload
+Format: UTF-8 JSON (minified or pretty). Must include a detached digital signature over a canonicalized payload. Stored on the client as `license.key`.
 
-Stored locally on the client machine
+Example payload (v1):
 
-File name
-
-license.key
-
-Schema (v1)
+```json
 {
-"schema_version": 1,
-
-"license_id": "LIC-9F3B2C8A",
-"product_id": "calcpro",
-
-"customer": {
-"customer_id": "CUST-00192",
-"name": "DM Sphere Pharmacy Limited"
-},
-
-"plan": "perpetual",
-"status": "ACTIVE",
-
-"issued_at": "2025-12-23T00:00:00Z",
-"expires_at": "2124-12-23T00:00:00Z",
-"updates_until": "2031-12-23T00:00:00Z",
-
-"trial": {
-"trial_days": null
-},
-
-"fingerprint": {
-"mode": "machine",
-"bound": true,
-"fingerprint_hash": "sha256:..."
-},
-
-"policy": {
-"check_interval_days": 30,
-"warn_after_days": 180,
-"max_offline_days": 365,
-"max_transfers": 2
-},
-
-"meta": {
-"notes": null
-},
-
-"signature_alg": "ed25519",
-"signature": "BASE64_SIGNATURE"
+  "schema_version": 1,
+  "license_id": "LIC-9F3B2C8A",
+  "product_id": "calcpro",
+  "customer": { "customer_id": "CUST-00192", "name": "DM Sphere Pharmacy Limited" },
+  "plan": "perpetual",
+  "status": "ACTIVE",
+  "issued_at": "2025-12-23T00:00:00Z",
+  "expires_at": "2124-12-23T00:00:00Z",
+  "updates_until": "2031-12-23T00:00:00Z",
+  "trial": { "trial_days": null },
+  "fingerprint": { "mode": "machine", "bound": true, "fingerprint_hash": "sha256:..." },
+  "policy": { "check_interval_days": 30, "warn_after_days": 180, "max_offline_days": 365, "max_transfers": 2 },
+  "meta": { "notes": null },
+  "signature_alg": "ed25519",
+  "signature": "BASE64_SIGNATURE"
 }
-
-1.1 Field Definitions
-schema_version (int)
-
-Fixed: 1 for this schema version.
-
-license_id (string)
-
-Unique license identifier.
-
-Recommended format: LIC- + 8–16 chars.
-
-Example: LIC-9F3B2C8A
-
-product_id (string)
-
-Product identifier used across all licensing operations.
-
-Example: calcpro
-
-customer (object)
-
-customer_id (string): vendor-issued unique customer reference.
-
-name (string): customer’s legal or trade name.
-
-plan (enum string)
-
-Supported values:
-
-trial
-
-perpetual
-
-subscription (reserved for future)
-
-status (enum string)
-
-Supported values:
-
-TRIAL
-
-TRIAL_EXPIRED
-
-ACTIVE
-
-ACTIVE_WARN
-
-EXPIRED
-
-SUSPENDED
-
-REVOKED
-
-Meaning
-
-ACTIVE: normal operation
-
-ACTIVE_WARN: runs, but warn (e.g. offline too long)
-
-SUSPENDED: block until vendor reactivates
-
-REVOKED: block permanently
-
-EXPIRED: block because usage period ended
-
-TRIAL_EXPIRED: trial ended, block or reduce-mode based on policy
-
-issued_at, expires_at, updates_until (RFC3339 UTC string)
-
-Required: issued_at
-
-Required: expires_at
-
-Required: updates_until for perpetual and subscription
-
-For trial, updates_until should exist but normally equals expires_at
-
-Interpretation
-
-expires_at: right-to-run deadline
-
-updates_until: right-to-update deadline
-
-trial.trial_days (int or null)
-
-If plan=trial, must be an integer > 0.
-
-If plan≠trial, must be null.
-
-fingerprint (object)
-
-mode: currently only machine
-
-bound (bool): true means license is machine-bound
-
-fingerprint_hash (string):
-
-sha256:<hex> strongly recommended
-
-Either pre-bound at issuance, or set at first activation
-
-policy (object)
-
-check_interval_days (int): server validation interval target (default 30)
-
-warn_after_days (int): days since last check before showing warnings (default 180)
-
-max_offline_days (int): hard maximum allowed without server validation (default 365)
-
-max_transfers (int): allowed vendor-approved transfers per period (policy enforced server-side)
-
-meta.notes (string or null)
-
-Optional notes for vendor use.
-
-signature_alg (string)
-
-v1 uses ed25519 (recommended for simplicity and security).
-
-signature (string)
-
-Base64 signature of the canonical payload.
-
-2. Canonicalization and Signing Rules
-   2.1 Canonical Payload
-
-To ensure consistent verification:
-
-The signed payload is the JSON object excluding:
-
-signature
-
-Canonicalization must:
-
-sort keys consistently
-
-normalize whitespace (no spaces)
-
-preserve exact field values
-
-2.2 Verification
-
-Client verifies:
-
-Signature is valid for payload
-
-product_id matches application
-
-status allows run
-
-expires_at not passed (using trusted time strategy)
-
-fingerprint matches machine (if bound)
-
-3. Local Validation Cache (license.state.json)
-   Purpose
-
-Enables offline operation and supports grace windows.
-
-File name
-
-license.state.json
-
-Schema (v1)
+```
+
+---
+
+## Field definitions
+
+- `schema_version` (int): fixed `1` for this document.
+- `license_id` (string): unique license identifier (recommend: `LIC-` + 8–16 chars).
+- `product_id` (string): product short-name used across API and client.
+- `customer` (object): `{ customer_id, name }` vendor identity fields.
+- `plan` (enum): `trial`, `perpetual`, (`subscription` reserved).
+- `status` (enum): `TRIAL`, `TRIAL_EXPIRED`, `ACTIVE`, `ACTIVE_WARN`, `EXPIRED`, `SUSPENDED`, `REVOKED`.
+  - `ACTIVE`: normal operation
+  - `ACTIVE_WARN`: running but client should warn (e.g., prolonged offline)
+  - `SUSPENDED` / `REVOKED` / `EXPIRED` / `TRIAL_EXPIRED`: block by policy
+- `issued_at`, `expires_at`, `updates_until` (RFC3339 UTC strings):
+  - `issued_at` and `expires_at` are required
+  - `updates_until` required for perpetual/subscription; for trials, typically equals `expires_at`
+- `trial.trial_days` (int | null): integer > 0 when `plan=trial`, otherwise `null`.
+- `fingerprint` (object): `{ mode, bound, fingerprint_hash }` — `fingerprint_hash` should be `sha256:<hex>` where possible.
+- `policy` (object): `{ check_interval_days, warn_after_days, max_offline_days, max_transfers }` — server-enforced limits.
+- `meta.notes` (string | null): optional vendor notes.
+- `signature_alg` (string): `ed25519` recommended for v1.
+- `signature` (string): base64 signature over the canonicalized payload.
+
+---
+
+## Canonicalization & signing rules
+
+### Canonical payload
+- The value signed is the JSON object **without** the `signature` field.
+- Canonicalization rules (v1):
+  - Sort object keys lexicographically.
+  - Use a deterministic whitespace-free representation (no extra spaces, newline rules consistent).
+  - Preserve exact field values and types.
+
+> Implementation note: Choose a consistent canonicalization library on both server and client to avoid signature verification issues.
+
+### Verification steps (client)
+- Verify signature using the public key and `signature_alg`.
+- Ensure `product_id` matches the running application.
+- Ensure `status` allows running and `expires_at` not passed.
+- If `fingerprint.bound === true`, ensure `fingerprint_hash` matches the machine.
+
+---
+
+## Local validation cache (`license.state.json`)
+
+Purpose: support offline workflows, grace windows, and quick client checks. Stored as JSON on the client.
+
+Example `license.state.json` (v1):
+
+```json
 {
-"schema_version": 1,
-
-"license_id": "LIC-9F3B2C8A",
-"product_id": "calcpro",
-
-"first_activated_at": "2025-12-23T10:11:00Z",
-
-"last_success_check_at": "2026-01-23T08:00:00Z",
-"next_check_due_at": "2026-02-22T08:00:00Z",
-
-"last_server_status": "ACTIVE",
-"last_server_message": "OK",
-
-"locked_to_fingerprint_hash": "sha256:...",
-
-"clock_guard": {
-"last_seen_time": "2026-01-23T08:00:00Z",
-"rollback_count": 0
+  "schema_version": 1,
+  "license_id": "LIC-9F3B2C8A",
+  "product_id": "calcpro",
+  "first_activated_at": "2025-12-23T10:11:00Z",
+  "last_success_check_at": "2026-01-23T08:00:00Z",
+  "next_check_due_at": "2026-02-22T08:00:00Z",
+  "last_server_status": "ACTIVE",
+  "last_server_message": "OK",
+  "locked_to_fingerprint_hash": "sha256:...",
+  "clock_guard": { "last_seen_time": "2026-01-23T08:00:00Z", "rollback_count": 0 }
 }
-}
+```
 
-3.1 Cache Field Definitions
+### Cache fields
+- `first_activated_at`: set once on first successful activation.
+- `last_success_check_at`: updated after each successful server validation.
+- `next_check_due_at`: computed from `last_success_check_at` + `policy.check_interval_days`.
+- `last_server_status` / `last_server_message`: last returned server state.
+- `locked_to_fingerprint_hash`: local enforcement copy of machine binding.
+- `clock_guard`: simple anti-rollback guard `{ last_seen_time, rollback_count }`.
 
-schema_version: fixed 1
+---
 
-license_id, product_id: copy from license payload
+## Client enforcement rules
 
-first_activated_at: written once on first activation
+### Startup enforcement
+Client must block startup when:
+- signature verification fails
+- `product_id` mismatch
+- `status` in `{ SUSPENDED, REVOKED, EXPIRED, TRIAL_EXPIRED }`
+- fingerprint mismatch (when bound)
+- current trusted time > `expires_at`
 
-last_success_check_at: updated after server validation success
+### Offline enforcement
+When offline or unable to contact server:
+- Allow running until `max_offline_days` since `last_success_check_at`.
+- Warn after `warn_after_days`.
+- Hard block after `max_offline_days`.
 
-next_check_due_at: computed using policy check_interval_days
+### Update entitlement
+When applying updates, require `APP_RELEASE_DATE` (from the update metadata) to be <= `updates_until`; otherwise deny applying the update and present upgrade messaging.
 
-last_server_status: last status returned
+---
 
-last_server_message: last informational message
+## Trial model (v1)
+- Trial is machine-bound and typically starts at first activation.
+- `trial.trial_days` controls trial length; `expires_at` marks the trial end.
+- v1 default behavior: block after trial expires unless policy changes are applied.
 
-locked_to_fingerprint_hash: fingerprint hash enforced locally
+---
 
-clock_guard: soft protection against time rollback
+## Reserved extensions (future)
+- Subscription enforcement and recurring billing hooks
+- Entitlements / add-ons (feature flags)
+- Multi-seat / floating licenses and LAN license servers
+- Offline activation codes and emergency unlock payloads
 
-4. Enforcement Rules (Client)
-   4.1 Startup enforcement
+---
 
-Client must block startup if:
+## Compatibility guarantees
+- v1 clients must ignore unknown fields.
+- Server may add non-breaking fields freely; breaking changes require schema version bump.
 
-signature invalid
+---
 
-product_id mismatch
+## Quick examples
+- Perpetual: `plan=perpetual`, `expires_at` far future, `updates_until` limited.
+- Trial: `plan=trial`, `trial.trial_days=60`, `expires_at` equals trial end.
 
-status in {SUSPENDED, REVOKED, EXPIRED, TRIAL_EXPIRED}
+---
 
-fingerprint mismatch (when bound)
+## Implementation notes & security
+- License verification logic should be protected (ionCube or similar) in production builds.
+- Public verification key is safe to ship with the client; private signing key must remain server-side and secure.
 
-current trusted time > expires_at
+---
 
-4.2 Offline enforcement
-
-If no server check occurs:
-
-allow run until max_offline_days from last_success_check_at
-
-warn after warn_after_days
-
-hard block after max_offline_days
-
-4.3 Update entitlement enforcement
-
-When installing or applying updates:
-
-each release must provide APP_RELEASE_DATE
-
-update allowed only if:
-
-APP_RELEASE_DATE <= updates_until
-
-If not allowed:
-
-do not apply update
-
-present upgrade messaging
-
-5. Trial Model (v1 default)
-   Trial behavior
-
-Trial is machine-bound
-
-Trial starts on first activation (or first run, depending on implementation choice)
-
-Trial ends when expires_at is reached
-
-After trial:
-
-block or reduce-mode can be configured later, but v1 will block by default unless explicitly changed
-
-6. Reserved Extensions (Future)
-
-The following are reserved for future without breaking v1:
-
-subscription plan enforcement
-
-entitlements or addons blocks (feature-based editions)
-
-multi-seat licensing
-
-floating licenses (LAN license server)
-
-offline activation codes and emergency unlock payloads
-
-7. Compatibility Guarantees
-
-v1 clients must ignore unknown fields
-
-server may add new fields without breaking v1 clients
-
-schema version bump required only for breaking changes
-
-8. Quick Examples
-   Perpetual License Example
-
-plan=perpetual
-
-expires_at far future
-
-updates_until limited
-
-full access implied
-
-Trial License Example
-
-plan=trial
-
-trial.trial_days=60
-
-expires_at set to trial end
-
-updates_until=expires_at
-
-9. Implementation Notes
-
-License verification logic must be ionCube-encoded in production.
-
-The public verification key must be shipped with the client (safe for public distribution).
-
-Private signing key must never be shipped to clients.
+*Document last updated: 2025-12-23*
