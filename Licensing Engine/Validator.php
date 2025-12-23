@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/sign.php';
 
 final class Validator
 {
@@ -32,6 +33,15 @@ final class Validator
         if (time() > $expiresAt) {
             throw new RuntimeException('License expired.');
         }
+    }
+
+    /**
+     * Verify the license signature using a base64-encoded public key.
+     * Returns true when valid, false otherwise.
+     */
+    public static function verifySignature(array $license, string $publicKeyB64): bool
+    {
+        return verify_payload_signature($license, $publicKeyB64);
     }
 
     public static function validateFingerprint(array $license, string $fingerprintHash): void
