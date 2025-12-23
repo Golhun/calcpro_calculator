@@ -1,126 +1,136 @@
 # PHP Licensing Engine (Offline-First)
 
-A standalone, reusable licensing engine for PHP applications, designed primarily for locally installed software with optional online validation. Built to work seamlessly with **ionCube-encoded** PHP files.
+## Purpose
+
+A small, product-agnostic licensing engine for PHP apps focused on desktop/server installations. It provides:
+- Signed license payloads (offline-friendly)
+- Machine binding and activation
+- Update entitlement controls
+- A compact server API for validation and transfer workflows
 
 ---
 
-## 🚀 Overview
+## Table of contents
 
-This engine is product-agnostic and built for desktop or server-based PHP installations. It supports perpetual licenses, time-limited trials, machine binding, and update entitlement control while maintaining an **offline-first** philosophy.
-
-## 🎯 Design Goals
-
-- **Environment:** Work for local desktop/server installations.
-- **Connectivity:** Operate offline by default with controlled periodic online checks.
-- **Licensing:** Support perpetual licenses with update entitlements.
-- **Security:** Prevent tampering using ionCube encoding and digital signatures.
-- **Simplicity:** Remain auditable, extensible, and free of "SaaS-forced" assumptions.
-
----
-
-## ✅ Functional Scope
-
-### What This Engine Does
-
-- Validates license authenticity via digital signatures.
-- Enforces trial periods and expiration dates.
-- Binds licenses to specific hardware (Machine Fingerprinting).
-- Controls update eligibility based on release dates.
-- Manages offline usage windows and optional server sync.
-
-### What This Engine Does NOT Do
-
-- ✘ Implement your application's business logic.
-- ✘ Manage the UI/UX for license entry.
-- ✘ Enforce feature flags (can be extended to do so).
-- ✘ Auto-update your application files.
+- [Quick start](#quick-start) ✅
+- [Core features](#core-features) 🎯
+- [Integration example](#integration-example) 🛠
+- [Architecture](#architecture) 🏗
+- [Security model](#security-model) 🛡
+- [Project structure](#project-structure) 📂
+- [Status & roadmap](#status--roadmap) 🚧
+- [Contributing](#contributing) 🤝
+- [License](#license) 📜
 
 ---
 
-## 🏗 High-Level Architecture
+## Quick start
 
-```text
-+-------------------+
-|   PHP Application |
-+-------------------+
-          |
-          v
-+-------------------+
-| Licensing Client  |  ← ionCube-encoded
-| (this project)    |
-+-------------------+
-          |
-          v
-+-------------------+
-| License File      |  ← signed, machine-bound
-+-------------------+
+1. Drop the ionCube-encoded client files into your app.
+2. Call the public API:
 
-Optional:
-          |
-          v
-+-------------------+
-| License Server    |
-+-------------------+
-🔑 Core Concepts
-1. Offline-First Philosophy
-Internet loss should never "brick" the application. Online checks are periodic and non-blocking based on a policy-driven window.
-
-2. Machine Binding
-Licenses are bound using a unique fingerprint derived from stable hardware and OS identifiers to prevent silent reuse across multiple machines.
-
-3. Update Entitlement Model
-We separate "License Validity" from "Update Entitlement."
-
-Valid for use: The software runs.
-
-Eligible for updates: Allowed only if APP_RELEASE_DATE ≤ updates_until.
-
-4. ionCube Integration
-Only critical security logic is encoded to balance protection with developer flexibility:
-
-Validation & Fingerprinting logic.
-
-Signature verification.
-
-Server communication.
-
-📂 Project Structure (Planned)
-Plaintext
-
-/
-├── README.md               # You are here
-├── LICENSE.md              # Legal terms
-├── schema.md               # License file JSON structure
-├── server_api.md           # API contract for remote validation
-├── license_client.php      # Main entry point (Encoded)
-├── fingerprint.php         # HWID generation (Encoded)
-├── validator.php           # Logic for checking signatures (Encoded)
-├── policy.php              # Offline/Trial logic (Encoded)
-├── helpers.php             # Non-critical utilities
-└── examples/               # Integration samples
-🛠 Integration
-Applications should interact only with the public API. No application code should inspect license internals.
-
-PHP
-
-// Standard integration pattern
+```php
 License::boot();
 License::assertValid();
+```
+
+3. Use `License::canReceiveUpdates()` to gate update checks.
+
+Note: The verification logic is encoded for production; see [Security model](#security-model).
+
+---
+
+## Core features
+
+- Offline-first validation and policy enforcement
+- Machine fingerprint binding and activation
+- Trial, perpetual, and update-entitlement models
+- Simple server API for `activate`, `validate`, `updates`, and `transfer_request`
+
+What this engine intentionally does NOT include:
+- Application-specific business logic or UI
+- Automatic file updates (it only indicates update eligibility)
+
+---
+
+## Integration example
+
+Typical usage in app bootstrap:
+
+```php
+require_once 'license_client.php';
+
+License::boot();
+if (!License::assertValid()) {
+  // Show licensing UI or exit
+}
 
 if (License::canReceiveUpdates()) {
-    // Logic for checking for new versions
+  // Query update server
 }
-🛡 Security Model
-Digital Signatures: Licenses are signed using asymmetric cryptography.
+```
 
-Asymmetric Trust: The client holds only the Public Key.
+---
 
-Tamper Proofing: Logic is hidden via ionCube to prevent "cracking" the validation checks.
+## Architecture
 
-🚧 Status
-Phase: Design / Initial Architecture.
+- Client: ionCube-encoded verification and local enforcement.
+- Local artifacts: `license.key` (signed payload) and `license.state.json` (cache).
+- Optional Server: provides activation/validation/update metadata and transfer workflows.
 
-Upcoming: Finalizing JSON schema and Server API contracts.
+Core concepts:
+- Offline-first: allow limited offline use using policy windows.
+- Machine-binding: licenses can be tied to specific machines to reduce abuse.
+- Update entitlement: updates allowed only when `APP_RELEASE_DATE <= updates_until`.
 
-Licensing should protect the business without punishing honest customers.
+---
+
+## Security model
+
+- Licenses are signed server-side (ed25519 recommended).
+- Clients ship only the public verification key.
+- Critical verification logic should be ionCube-encoded for production builds.
+- Private signing key must remain on the server and be properly protected.
+
+---
+
+## Project structure
+
+```
+/ (root)
+├── README.md
+├── LICENSE.md
+├── schema.md
+├── server_api.md
+├── license_client.php      # Encoded verification library
+├── fingerprint.php         # HWID generation (encoded)
+├── validator.php           # Signature validation (encoded)
+├── policy.php              # Offline/trial logic (encoded)
+├── helpers.php             # Non-sensitive helpers
+└── examples/               # Integration examples
+```
+
+---
+
+## Status & roadmap
+
+- Phase: Design / Initial Architecture
+- Next: finalize `schema.md` and `server_api.md`, add integration examples, and prepare test harnesses
+
+---
+
+## Contributing
+
+- Keep docs clear and include JSON examples for schema/API updates.
+- Tests and examples are welcome in `/examples`.
+
+---
+
+## License
+
+Refer to `LICENSE.md` in the repo for licensing terms.
+
+---
+
+*Last updated: 2025-12-23*
 ```
